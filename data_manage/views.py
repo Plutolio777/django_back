@@ -1,15 +1,26 @@
 # data_manage/views.py
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.parsers import JSONParser, MultiPartParser
 
 from .models import DataSet
 from .serializers import DataSetSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.exceptions import NotFound, PermissionDenied
+from .models import DataSet
+import pandas as pd
+from rest_framework.permissions import IsAuthenticated
 
 
 class DataSetViewSet(viewsets.ModelViewSet):
     queryset = DataSet.objects.all()
     serializer_class = DataSetSerializer
     pagination_class = LimitOffsetPagination  # 显式指定分页类（如果你想自定义分页行为）
+    permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser, MultiPartParser]
 
     def get_queryset(self):
         request = self.request
@@ -26,3 +37,64 @@ class DataSetViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(type=data_type)
 
         return queryset
+
+    # 新增一个删除方法，支持根据查询参数删除
+    @action(detail=False, methods=['delete'], url_path='')
+    def delete_by_query(self, request, *args, **kwargs):
+        # 获取查询参数中的 id
+        dataset_id = request.query_params.get('id', None)
+
+        if not dataset_id:
+            return Response({"error": "请提供数据集 ID"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 获取指定 ID 的 DataSet
+            dataset = DataSet.objects.get(pk=dataset_id)
+        except DataSet.DoesNotExist:
+            raise NotFound("指定的 DataSet 未找到")
+
+        # 确保用户只能删除自己创建的数据集
+        if dataset.creator != request.user.id:
+            raise PermissionDenied("你不能删除其他用户的数据集")
+
+        dataset.delete()
+        return Response({"message": "数据集已成功删除"}, status=status.HTTP_204_NO_CONTENT)
+
+
+class DataSetFileByIdView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser, MultiPartParser]
+
+    def get(self, request):
+        # 获取查询参数中的 id
+        dataset_id = request.query_params.get('id', None)
+
+        if not dataset_id:
+            return Response({"error": "请提供数据集 ID"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 获取指定 ID 的 DataSet
+            dataset = DataSet.objects.get(pk=dataset_id)
+        except DataSet.DoesNotExist:
+            raise NotFound("指定的 DataSet 未找到")
+
+        # 获取文件路径
+        file_path = dataset.data_set_path.path
+
+        # 读取 CSV 或 Excel 文件
+        if file_path.endswith('.csv'):
+            df = pd.read_csv(file_path)
+        elif file_path.endswith(('.xls', '.xlsx')):
+            df = pd.read_excel(file_path)
+        else:
+            return Response({"error": "文件类型不支持"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 将数据转换为字典列表（适合 JSON 格式）
+        data = df.to_dict(orient='records')
+
+        # 返回数据
+        return Response({
+            "id": dataset.id,
+            "name": dataset.name,
+            "data": data
+        })

@@ -49,3 +49,4 @@ class DataSetSerializer(serializers.ModelSerializer):
             representation['path'] = "/api/static/upload" + representation['data_set_path']
 
         return representation
+
