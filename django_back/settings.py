@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django_extensions",
     'accounts.apps.AccountsConfig',
     'data_manage.apps.DataManageConfig',
+    'data_mark.apps.DataMarkConfig',
 ]
 
 

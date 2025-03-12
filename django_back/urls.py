@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('accounts.urls')),
     path('api/data_manage/', include('data_manage.urls')),
+    path('api/data_mark/', include('data_mark.urls')),
 ]
 
 from django.conf import settings

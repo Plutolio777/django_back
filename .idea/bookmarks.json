@@ -1,3 +1,10 @@
 {
-  "django_back": []
+  "django_back": [
+    {
+      "fileDescriptor": "$/data_mark/models.py",
+      "linenumber": 8,
+      "name": "data_set_id \u003d models.IntegerField(null\u003dFalse, blank\u003dFalse, verbose_name\u003d\u0027数据集id\u0027)",
+      "bookmarkType": "DEFAULT"
+    }
+  ]
 }
