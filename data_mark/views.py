@@ -12,7 +12,7 @@ from .models import TimeFrequencyMarkingRecord
 from .serializers import TimeFrequencyMarkingRecordSerializer
 
 
-class SaveDataSetToRecord(APIView):
+class DataMarkRecord(APIView):
 
     def post(self, request):
         # 获取前端传来的数据集ID
