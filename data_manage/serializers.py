@@ -42,7 +42,11 @@ class DataSetSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         # 获取默认的序列化数据
         representation = super().to_representation(instance)
-
+        # 处理日期格式
+        if 'create_time' in representation:
+            representation['create_time'] = instance.create_time.strftime('%Y-%m-%d %H:%M:%S')
+        if 'update_time' in representation:
+            representation['update_time'] = instance.update_time.strftime('%Y-%m-%d %H:%M:%S')
         # 拼接绝对路径
         if 'data_set_path' in representation:
             # 拼接完整 URL，基于 MEDIA_URL

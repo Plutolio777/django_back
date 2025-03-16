@@ -27,4 +27,9 @@ class DataSet(models.Model):
     def __str__(self):
         return self.name
 
+    def formatted_create_time(self):
+        return self.create_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    def formatted_update_time(self):
+        return self.update_time.strftime("%Y-%m-%d %H:%M:%S")
 
