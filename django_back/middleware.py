@@ -25,15 +25,15 @@ class JSONResponseMiddleware:
             # 判断返回数据是字典还是数组
             if isinstance(response_data, dict):
                 response_data = {
-                    "status": "success" if response.status_code == 200 else "error",
+                    "status": "success" if  200 <= response.status_code < 300 else "error",
                     "data": response_data,  # 使用 data 作为 key
-                    "message": "Request was successful" if response.status_code == 200 else "An error occurred"
+                    "message": "Request was successful" if 200 <= response.status_code < 300 else "An error occurred"
                 }
             elif isinstance(response_data, list):
                 response_data = {
-                    "status": "success" if response.status_code == 200 else "error",
+                    "status": "success" if 200 <= response.status_code < 300 else "error",
                     "datas": response_data,  # 使用 datas 作为 key
-                    "message": "Request was successful" if response.status_code == 200 else "An error occurred"
+                    "message": "Request was successful" if 200 <= response.status_code < 300 else "An error occurred"
                 }
 
             # 将处理后的数据设置回 response 并返回
