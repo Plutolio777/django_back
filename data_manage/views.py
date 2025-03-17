@@ -34,7 +34,7 @@ class DataSetViewSet(viewsets.ModelViewSet):
 
         # 根据类型进行查询
         if data_type:
-            queryset = queryset.filter(type=data_type)
+            queryset = queryset.filter(type__in=data_type.split(','))
 
         return queryset
 

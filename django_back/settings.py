@@ -116,8 +116,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
+USE_L10N = False
 
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'  # 设置日期时间格式为年/月/日 小时:分钟
 USE_I18N = True
 
 USE_TZ = True
