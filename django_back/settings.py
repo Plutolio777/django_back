@@ -41,10 +41,16 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "django_extensions",
+    'django_celery_results',
+    'django_celery_beat',
     'accounts.apps.AccountsConfig',
     'data_manage.apps.DataManageConfig',
     'data_mark.apps.DataMarkConfig',
+    'data_label.apps.DataLabelConfig'
 ]
+
+# 定时任务配置
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 
 MIDDLEWARE = [
@@ -117,12 +123,14 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Shanghai'
+USE_I18N = True
+USE_TZ = True
+
+
 USE_L10N = False
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'  # 设置日期时间格式为年/月/日 小时:分钟
-USE_I18N = True
 
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -167,3 +175,18 @@ SIMPLE_JWT = {
     'AUDIENCE': None,                                 # 令牌的受众
     'ISSUER': None,                                   # 令牌的发行者
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "my_cache_table",
+    }
+}
+
+CELERY_BROKER_URL = f'redis://127.0.0.1:6379/0'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 60 * 80
+# django_celery_results
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'

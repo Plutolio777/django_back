@@ -45,6 +45,7 @@ class DataSetSerializer(serializers.ModelSerializer):
         validated_data['creator'] = request.user.id
         file = validated_data.get('data_set_path', None)
         validated_data['origin_path'] = file
+        validated_data['file_size'] = file.size
         if file:
             # 获取文件扩展名
             file_extension = os.path.splitext(file.name)[1].lower()

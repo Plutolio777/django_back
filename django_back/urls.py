@@ -15,14 +15,29 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.shortcuts import render
+from django.urls import path, include, re_path
+from django.views import View
 
 
+class HomeView(View):
+
+    def get(self, request):
+        Response = render(request, 'index.html')
+        # 5. 返回响应数据
+        return Response
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('accounts.urls')),
     path('api/data_manage/', include('data_manage.urls')),
     path('api/data_mark/', include('data_mark.urls')),
+    path('api/data_mark/', include('data_label.urls')),
+    path('', HomeView.as_view()),
+]
+
+# 3. 通配路由（必须放在最后）
+urlpatterns += [
+    re_path(r'^(?!static/|media/|admin/|api/).*', HomeView.as_view()),
 ]
 
 from django.conf import settings

@@ -13,6 +13,7 @@ from utils.validators import validate_filename, validate_no_executable_files
 class DataSet(models.Model):
     name = models.CharField(max_length=128, null=False, blank=False, verbose_name='数据集名称')
     description = models.TextField(null=True, blank=True, verbose_name='数据集描述')
+    data_source_type = models.CharField(max_length=20, null=True, blank=True, verbose_name='电话号码', default="数据源")
     type = models.CharField(max_length=20, null=True, blank=True, verbose_name='电话号码')
     create_time = models.DateTimeField(auto_now_add=True, null=False, blank=False, verbose_name='数据集创建时间')
     update_time = models.DateTimeField(auto_now=True, null=False, blank=False, verbose_name='数据集更新时间')
@@ -23,6 +24,7 @@ class DataSet(models.Model):
         validate_no_executable_files,
     ])
     creator = models.IntegerField(null=False, blank=False, verbose_name='创建者')
+    file_size = models.BigIntegerField(null=False, blank=False, verbose_name='创建者',default=0)
 
     def __str__(self):
         return self.name

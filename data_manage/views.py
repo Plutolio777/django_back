@@ -36,7 +36,7 @@ class DataSetViewSet(viewsets.ModelViewSet):
         if data_type:
             queryset = queryset.filter(type__in=data_type.split(','))
 
-        return queryset
+        return queryset.order_by("-update_time")
 
     # 新增一个删除方法，支持根据查询参数删除
     @action(detail=False, methods=['delete'], url_path='')
@@ -66,8 +66,10 @@ class DataSetFileByIdView(APIView):
     parser_classes = [JSONParser, MultiPartParser]
 
     def get(self, request):
-        # 获取查询参数中的 id
+        # 获取查询参数中的 id、limit 和 offset
         dataset_id = request.query_params.get('id', None)
+        limit = int(request.query_params.get('limit', 10))  # 默认每次返回10条
+        offset = int(request.query_params.get('offset', 0))  # 默认从第0条开始
 
         if not dataset_id:
             return Response({"error": "请提供数据集 ID"}, status=status.HTTP_400_BAD_REQUEST)
@@ -82,19 +84,28 @@ class DataSetFileByIdView(APIView):
         file_path = dataset.data_set_path.path
 
         # 读取 CSV 或 Excel 文件
-        if file_path.endswith('.csv'):
-            df = pd.read_csv(file_path)
-        elif file_path.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(file_path)
-        else:
-            return Response({"error": "文件类型不支持"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if file_path.endswith('.csv'):
+                df = pd.read_csv(file_path)  # 默认第一行作为表头
+            elif file_path.endswith(('.xls', '.xlsx')):
+                df = pd.read_excel(file_path)  # 默认第一行作为表头
+            else:
+                return Response({"error": "文件类型不支持"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"文件读取失败: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # 将数据转换为字典列表（适合 JSON 格式）
-        data = df.to_dict(orient='records')
+        # 获取表头
+        headers = list(df.columns)
 
-        # 返回数据
+        # 应用分页（避免一次性返回所有数据）
+        paginated_data = df.iloc[offset:offset + limit].to_dict(orient='records')
+
         return Response({
             "id": dataset.id,
             "name": dataset.name,
-            "data": data
+            "headers": headers,  # 返回表头
+            "data": paginated_data,  # 返回分页后的数据
+            "total_rows": len(df),  # 总行数，便于前端分页
+            "limit": limit,
+            "offset": offset
         })
