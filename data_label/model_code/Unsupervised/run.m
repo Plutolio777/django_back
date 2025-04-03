@@ -24,8 +24,7 @@ for k = 1:length(fileTypes)
 end
 
 % 加载模型
-load net.mat
-net = optimizedNet;
+load optimizedNet.mat
 
 fs = 20; % 数据采样频率
 t = 0:1/fs:1200/fs;
