@@ -61,7 +61,7 @@ for k = 1:length(files)
                 x = readmatrix(fullFileName, 'Range', 'A2:A72002');
             case '.csv'
                 data = readmatrix(fullFileName);
-                disp(data[1:10]))
+                disp(data(1:10));
                 disp(size(data));
                 x = data(1:72000, 1); % 第四列，行3-72002
             otherwise
