@@ -170,3 +170,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+/media/upload/marks/TimeFrequencyLabelTask/labels/
+/media/upload/marks/UnsupervisedLabelTask/labels/
