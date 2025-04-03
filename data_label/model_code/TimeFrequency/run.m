@@ -117,11 +117,11 @@ end
 
 % 分类及数据清洗
 validCount = 1;
-filteredFiles = cell(60*length(files),1);
-filteredLabels = cell(60*length(files),1);
+filteredFiles = cell(length(files)*60,1);
+filteredLabels = cell(length(files)*60,1);
 
 
-for i = 1: 60*length(files)
+for i = 1:length(files)*60
     try
         I = imread(fileNames{i});
         [label, ~] = classify(net, I);
@@ -133,6 +133,7 @@ for i = 1: 60*length(files)
         end
     catch ME
         warning('文件%s处理失败: %s', fileNames{i}, ME.message);
+        disp(getReport(ME, 'extended', 'hyperlinks', 'on'));
     end
 end
 
@@ -142,7 +143,7 @@ filteredFiles = filteredFiles(1:validCount-1);
 filteredLabels = filteredLabels(1:validCount-1);
 
 %% 将结果保存为表格，并写入Excel文件
-resultsTable = table(fileNames, labels, 'VariableNames', {'FileName', 'Label'});
+resultsTable = table(filteredFiles, filteredLabels, 'VariableNames', {'FileName', 'Label'});
 writetable(resultsTable, outFile);
 
 
