@@ -62,7 +62,7 @@ for k = 1:length(files)
                 x = data(2:end, 4);
             case '.csv'
                 data = readmatrix(fullFileName);
-                x = data(2:71983, 4); % 第四列，行3-72002
+                x = data(3:end, 4); % 从第3行开始到最后一行，第4列
             otherwise
                 error('不支持的格式: %s', ext);
         end
