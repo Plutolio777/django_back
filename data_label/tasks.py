@@ -109,7 +109,7 @@ class BaseLabelTaskService:
 
     @classmethod
     def do_start_matlab_model(cls, input_dir, target_dir, call_modes=None, task_label="1,2,3,4,5,6,7"):
-        work_dir = os.path.join(settings.BASE_DIR, "data_label", call_modes)
+        work_dir = os.path.join(settings.BASE_DIR, "data_label", "model_code", call_modes)
 
         command = f"cd {work_dir} && matlab -nosplash -batch \"try, run('{input_dir}', '{target_dir}', '{task_label}') ; catch, disp(lasterr), end; exit;\""
         print(f"执行命令：{command}")
