@@ -121,7 +121,7 @@ filteredFiles = cell(1440,1);
 filteredLabels = cell(1440,1);
 
 
-for i = 1:1440
+for i = 1: 60*length(files)
     try
         I = imread(fileNames{i});
         [label, ~] = classify(net, I);
