@@ -58,7 +58,7 @@ for k = 1:length(files)
             case '.txt'
                 x = load(fullFileName);
             case {'.xlsx', '.xls'}
-                x = readmatrix(fullFileName, 'Range', 'A2:A72002');
+                x = readmatrix(fullFileName, 'Range', 'A1:A72000');
             case '.csv'
                 data = readmatrix(fullFileName);
                 disp(data(1:10));
@@ -105,14 +105,13 @@ for k = 1:length(files)
 
             folderName = 'ZD020102_data';
             fileName = fullfile(img_dir, sprintf('%s_%02d_%02d.bmp', folderName, k-1, i));
-            disp([(k-1)*60+i, fileName])
+            disp([(k-1)*60+i, fileName]);
             print(gcf, '-dbmp', fileName);
             fileNames{(k-1)*60+i} = fileName;
             close(gcf);
         end
     catch ME
         warning('文件%s处理失败: %s', baseFileName, ME.message);
-        disp(getReport(ME, 'extended', 'hyperlinks', 'on'));
     end
 end
 
