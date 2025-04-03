@@ -100,7 +100,8 @@ for k = 1:length(files)
             set(gcf, 'PaperPosition', [0 0 figWidth figHeight]);
 
             folderName = 'ZD020102_data';
-            fileName = fullfile(img_dir, sprintf('%s_%02d_%02d.bmp', folderName, k-1, i));
+            fileName = fullfile(img_dir, sprintf('%s_%02d_%02d.bmp', folderName, 0, i));
+            disp([(k-1)*60+i, fileName])
             print(gcf, '-dbmp', fileName);
             fileNames{(k-1)*60+i} = fileName;
             close(gcf);
