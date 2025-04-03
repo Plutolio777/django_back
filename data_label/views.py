@@ -33,6 +33,7 @@ class DataMarkTaskBaseViewSet(viewsets.ModelViewSet):
     def execute(self, request):
         """ 获取当前登录用户信息 """
         task_id = request.data.get("task_id", None)
+        task_label = request.data.get("label", "1,2,3,4,5,6,7")
         task = self.model.objects.filter(id=task_id).first()
         if task is None:
             return Response({"message": "获取任务失败"}, status=status.HTTP_400_BAD_REQUEST)
@@ -44,7 +45,7 @@ class DataMarkTaskBaseViewSet(viewsets.ModelViewSet):
             task.status = 1
             task.task_execute_time = timezone.now()
             task.save()
-        self.task.delay_on_commit(task_id)
+        self.task.delay_on_commit(task_id, task_label)
 
         # 返回响应
         serializer = self.get_serializer(task)
