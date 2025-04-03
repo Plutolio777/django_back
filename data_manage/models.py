@@ -19,7 +19,7 @@ class DataSet(models.Model):
     update_time = models.DateTimeField(auto_now=True, null=False, blank=False, verbose_name='数据集更新时间')
     origin_path = models.TextField(null=True, blank=True, verbose_name='原始文件名称')
     data_set_path = models.FileField(upload_to="data_sets/", verbose_name='数据集路径', validators=[
-        FileExtensionValidator(allowed_extensions=['xlsx', "csv", "xls"]),
+        FileExtensionValidator(allowed_extensions=['xlsx', "csv", "xls", "tar", "zip", "7z", "tar.gz", 'tar.bz2']),
         validate_filename,
         validate_no_executable_files,
     ])

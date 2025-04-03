@@ -7,7 +7,9 @@ from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from .models import DataSet
 import os
 import pandas as pd
+
 beijing_tz = pytz.timezone('Asia/Shanghai')
+
 
 class DataSetSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,6 +57,8 @@ class DataSetSerializer(serializers.ModelSerializer):
                 validated_data['type'] = 'csv'
             elif file_extension in ['.xls', '.xlsx']:
                 validated_data['type'] = 'excel'
+            elif file_extension in ["tar", "zip", "tar.gz", "7z", 'tar.bz2']:
+                validated_data['type'] = 'zip'
             else:
                 validated_data['type'] = 'unknown'
 
@@ -66,9 +70,11 @@ class DataSetSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         # 处理日期格式
         if 'create_time' in representation:
-            representation['create_time'] = instance.create_time.astimezone(beijing_tz).strftime(settings.DATETIME_FORMAT)
+            representation['create_time'] = instance.create_time.astimezone(beijing_tz).strftime(
+                settings.DATETIME_FORMAT)
         if 'update_time' in representation:
-            representation['update_time'] = instance.update_time.astimezone(beijing_tz).strftime(settings.DATETIME_FORMAT)
+            representation['update_time'] = instance.update_time.astimezone(beijing_tz).strftime(
+                settings.DATETIME_FORMAT)
         # 拼接绝对路径
         if 'data_set_path' in representation:
             # 拼接完整 URL，基于 MEDIA_URL

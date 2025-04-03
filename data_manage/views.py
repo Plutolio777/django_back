@@ -1,9 +1,13 @@
 # data_manage/views.py
+import os.path
+import shutil
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.parsers import JSONParser, MultiPartParser
 
+from utils import tools
 from .models import DataSet
 from .serializers import DataSetSerializer
 from rest_framework.views import APIView
@@ -81,7 +85,7 @@ class DataSetFileByIdView(APIView):
             raise NotFound("指定的 DataSet 未找到")
 
         # 获取文件路径
-        file_path = dataset.data_set_path.path
+        file_path = os.path.normpath(dataset.data_set_path.path)
 
         # 读取 CSV 或 Excel 文件
         try:
@@ -89,6 +93,34 @@ class DataSetFileByIdView(APIView):
                 df = pd.read_csv(file_path)  # 默认第一行作为表头
             elif file_path.endswith(('.xls', '.xlsx')):
                 df = pd.read_excel(file_path)  # 默认第一行作为表头
+            elif file_path.endswith(('.zip', '.tar', '.gz', '.bz2')):
+                # 尝试解压文件
+                from django_back.settings import MEDIA_ROOT
+                input_dir = os.path.join(MEDIA_ROOT, "data_sets", "unzip", dataset_id)
+                if not os.path.exists(input_dir):
+                    os.makedirs(input_dir)
+                    shutil.copy2(file_path, input_dir)
+                    tools.try_unzip_files(input_dir)
+                datas = []
+                for file in os.listdir(input_dir):
+                    if file.endswith(('.zip', '.tar', '.gz', '.bz2')):
+                        continue
+                    final_path = os.path.join(input_dir, file)
+                    media_url = tools.media_path_to_url(final_path)
+                    datas.append({
+                        "文件名称": file,
+                        "file_path": media_url
+                    })
+                return Response({
+                    "id": dataset.id,
+                    "name": dataset.name,
+                    "headers": ["文件名称"],  # 返回表头
+                    "data": datas,  # 返回分页后的数据
+                    "total_rows": len(datas),  # 总行数，便于前端分页
+                    "limit": limit,
+                    "offset": offset,
+                    "type": "files"
+                })
             else:
                 return Response({"error": "文件类型不支持"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -107,5 +139,6 @@ class DataSetFileByIdView(APIView):
             "data": paginated_data,  # 返回分页后的数据
             "total_rows": len(df),  # 总行数，便于前端分页
             "limit": limit,
-            "offset": offset
+            "offset": offset,
+            "type": "file"
         })

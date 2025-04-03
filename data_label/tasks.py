@@ -1,12 +1,15 @@
 import os
 import shutil
+import tarfile
+import py7zr
+import zipfile
 
 from celery import shared_task
 from django.db import transaction
 from django.utils import timezone
-import time
 import logging
 
+from utils import tools
 from data_label.models import TimeFrequencyLabelTask, UnsupervisedLabelTask, CleanedData
 from django_back import settings
 
@@ -82,6 +85,42 @@ class BaseLabelTaskService:
         """获取标注类型，由子类实现"""
         raise NotImplementedError("子类必须实现此方法")
 
+    @classmethod
+    def do_start_matlab_model(cls, input_dir, target_dir, labels=None):
+        source_dir = os.path.normpath(os.path.join(settings.MEDIA_ROOT, 'test_data'))  # 源目录
+        # 2. 校验源目录是否存在
+        if not os.path.exists(source_dir):
+            raise FileNotFoundError(f"源目录不存在: {source_dir}")
+        if not os.path.isdir(source_dir):
+            raise NotADirectoryError(f"源路径不是目录: {source_dir}")
+
+        # 3. 清空目标目录（如果存在）
+        cls.clear_and_recreate_dir(target_dir)
+
+        # 4. 递归复制所有内容（使用 dirs_exist_ok=True 兼容 Windows）
+        try:
+            shutil.copytree(
+                src=source_dir,
+                dst=target_dir,
+                symlinks=True,
+                ignore=None,
+                dirs_exist_ok=True  # 改为 True 以兼容 Windows
+            )
+            print(f"已复制全部内容: {source_dir} -> {target_dir}")
+        except Exception as e:
+            raise RuntimeError(f"复制文件失败: {str(e)}")
+        pass
+
+    @classmethod
+    def clear_and_recreate_dir(cls, input_dir):
+        try:
+            if os.path.exists(input_dir):
+                print(f"正在清空目标目录: {input_dir}")
+                shutil.rmtree(input_dir)  # 递归删除目录
+            os.makedirs(input_dir, exist_ok=True)  # 重新创建空目录
+        except Exception as e:
+            raise RuntimeError(f"清空目标目录失败: {str(e)}")
+
 
 class TimeFrequencyLabelTaskService(BaseLabelTaskService):
     """时间频率标注任务服务"""
@@ -138,40 +177,20 @@ class UnsupervisedLabelTaskService(BaseLabelTaskService):
     def _do_task(cls, task):
         """执行无监督标注任务（先清空目标目录，再递归复制所有内容）"""
         print("正在执行无监督标注任务")
-
         # 1. 定义路径（统一使用 os.path 处理路径）
-        source_dir = os.path.normpath(os.path.join(settings.MEDIA_ROOT, 'test_data'))  # 源目录
         target_dir = os.path.normpath(task.out_put_path)  # 目标目录
+        origin_dataset_path = os.path.normpath(task.dataset.data_set_path)
 
-        # 2. 校验源目录是否存在
-        if not os.path.exists(source_dir):
-            raise FileNotFoundError(f"源目录不存在: {source_dir}")
-        if not os.path.isdir(source_dir):
-            raise NotADirectoryError(f"源路径不是目录: {source_dir}")
+        # 2.生成input_dir
+        input_dir = os.path.join(target_dir, "data_set")
 
         # 3. 清空目标目录（如果存在）
-        try:
-            if os.path.exists(target_dir):
-                print(f"正在清空目标目录: {target_dir}")
-                shutil.rmtree(target_dir)  # 递归删除目录
-            os.makedirs(target_dir, exist_ok=True)  # 重新创建空目录
-        except Exception as e:
-            raise RuntimeError(f"清空目标目录失败: {str(e)}")
-
-        # 4. 递归复制所有内容（使用 dirs_exist_ok=True 兼容 Windows）
-        try:
-            shutil.copytree(
-                src=source_dir,
-                dst=target_dir,
-                symlinks=True,
-                ignore=None,
-                dirs_exist_ok=True  # 改为 True 以兼容 Windows
-            )
-            print(f"已复制全部内容: {source_dir} -> {target_dir}")
-        except Exception as e:
-            raise RuntimeError(f"复制文件失败: {str(e)}")
-
-        # 5. 模拟任务执行（原逻辑）
+        cls.clear_and_recreate_dir(input_dir)
+        # 3.将data_path拷贝到data_set目录中
+        shutil.copy2(origin_dataset_path, input_dir)
+        # 4.尝试解压压缩文件（如果有的话）
+        tools.try_unzip_files(input_dir)
+        cls.do_start_matlab_model(input_dir, target_dir)
         print("无监督标注任务执行完毕")
 
     @classmethod
@@ -187,6 +206,7 @@ def time_data_label_execute(task_id):
         task_model=TimeFrequencyLabelTask,
         update_cleaned_data=True  # 需要更新CleanedData
     )
+
 
 @shared_task
 def unsupervised_data_label_execute(task_id):
