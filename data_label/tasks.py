@@ -57,7 +57,7 @@ class BaseLabelTaskService:
 
                 except Exception as e:
                     # 任务失败 - 更新任务状态为2(失败)
-                    logger.error(f"任务 {task_id} 执行失败: {str(e)}", exc_info=True)
+                    logger.info(f"任务 {task_id} 执行失败: {str(e)}", exc_info=True)
                     task.status = 2
                     task.task_execute_time = timezone.now()
                     task.save()
@@ -86,17 +86,34 @@ class BaseLabelTaskService:
         raise NotImplementedError("子类必须实现此方法")
 
     @classmethod
-    def do_start_matlab_model(cls, input_dir, target_dir, labels=None):
+    def prepare_the_environment(cls, task):
+        target_dir = os.path.normpath(task.out_put_path)  # 目标目录
+        origin_dataset_path = os.path.normpath(task.dataset.data_set_path.path)
+
+        # 2.生成input_dir
+        input_dir = os.path.join(target_dir, "data_set")
+        print(f"重新生成输入文件夹：{input_dir}")
+        # 3. 清空目标目录（如果存在）
+        cls.clear_and_recreate_dir(target_dir)
+        print(f"重新生成输出文件夹：{target_dir}")
+        # 3. 清空目标目录（如果存在）
+        cls.clear_and_recreate_dir(input_dir)
+        print(f"同步输入数据集：{origin_dataset_path}")
+        # 3.将data_path拷贝到data_set目录中
+        shutil.copy2(origin_dataset_path, input_dir)
+        # 4.尝试解压压缩文件（如果有的话）
+        print(f"尝试进行解压缩")
+        tools.try_unzip_files(input_dir)
+        return input_dir, target_dir
+
+    @classmethod
+    def do_start_matlab_model(cls, input_dir, target_dir, labels=None, call_modes=None):
         source_dir = os.path.normpath(os.path.join(settings.MEDIA_ROOT, 'test_data'))  # 源目录
         # 2. 校验源目录是否存在
         if not os.path.exists(source_dir):
             raise FileNotFoundError(f"源目录不存在: {source_dir}")
         if not os.path.isdir(source_dir):
             raise NotADirectoryError(f"源路径不是目录: {source_dir}")
-
-        # 3. 清空目标目录（如果存在）
-        cls.clear_and_recreate_dir(target_dir)
-
         # 4. 递归复制所有内容（使用 dirs_exist_ok=True 兼容 Windows）
         try:
             shutil.copytree(
@@ -127,43 +144,13 @@ class TimeFrequencyLabelTaskService(BaseLabelTaskService):
 
     @classmethod
     def _do_task(cls, task):
-        """执行无监督标注任务（先清空目标目录，再递归复制所有内容）"""
-        print("正在执行无监督标注任务")
-
+        """执行时频注任务（先清空目标目录，再递归复制所有内容）"""
+        print("正在执行时频标注任务")
         # 1. 定义路径（统一使用 os.path 处理路径）
-        source_dir = os.path.normpath(os.path.join(settings.MEDIA_ROOT, 'test_data'))  # 源目录
-        target_dir = os.path.normpath(task.out_put_path)  # 目标目录
-
-        # 2. 校验源目录是否存在
-        if not os.path.exists(source_dir):
-            raise FileNotFoundError(f"源目录不存在: {source_dir}")
-        if not os.path.isdir(source_dir):
-            raise NotADirectoryError(f"源路径不是目录: {source_dir}")
-
-        # 3. 清空目标目录（如果存在）
-        try:
-            if os.path.exists(target_dir):
-                print(f"正在清空目标目录: {target_dir}")
-                shutil.rmtree(target_dir)  # 递归删除目录
-            os.makedirs(target_dir, exist_ok=True)  # 重新创建空目录
-        except Exception as e:
-            raise RuntimeError(f"清空目标目录失败: {str(e)}")
-
-        # 4. 递归复制所有内容（使用 dirs_exist_ok=True 兼容 Windows）
-        try:
-            shutil.copytree(
-                src=source_dir,
-                dst=target_dir,
-                symlinks=True,
-                ignore=None,
-                dirs_exist_ok=True  # 改为 True 以兼容 Windows
-            )
-            print(f"已复制全部内容: {source_dir} -> {target_dir}")
-        except Exception as e:
-            raise RuntimeError(f"复制文件失败: {str(e)}")
-
-        # 5. 模拟任务执行（原逻辑）
-        print("无监督标注任务执行完毕")
+        input_dir, target_dir = cls.prepare_the_environment(task)
+        print("调用时频模型")
+        cls.do_start_matlab_model(input_dir, target_dir, call_modes=cls._get_label_type())
+        print("正在执行时频标注任务")
 
     @classmethod
     def _get_label_type(cls):
@@ -178,19 +165,9 @@ class UnsupervisedLabelTaskService(BaseLabelTaskService):
         """执行无监督标注任务（先清空目标目录，再递归复制所有内容）"""
         print("正在执行无监督标注任务")
         # 1. 定义路径（统一使用 os.path 处理路径）
-        target_dir = os.path.normpath(task.out_put_path)  # 目标目录
-        origin_dataset_path = os.path.normpath(task.dataset.data_set_path)
-
-        # 2.生成input_dir
-        input_dir = os.path.join(target_dir, "data_set")
-
-        # 3. 清空目标目录（如果存在）
-        cls.clear_and_recreate_dir(input_dir)
-        # 3.将data_path拷贝到data_set目录中
-        shutil.copy2(origin_dataset_path, input_dir)
-        # 4.尝试解压压缩文件（如果有的话）
-        tools.try_unzip_files(input_dir)
-        cls.do_start_matlab_model(input_dir, target_dir)
+        input_dir, target_dir = cls.prepare_the_environment(task)
+        print("调用无监督模型")
+        cls.do_start_matlab_model(input_dir, target_dir, call_modes=cls._get_label_type())
         print("无监督标注任务执行完毕")
 
     @classmethod
