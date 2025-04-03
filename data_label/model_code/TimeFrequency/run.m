@@ -58,10 +58,10 @@ for k = 1:length(files)
             case '.txt'
                 x = load(fullFileName);
             case {'.xlsx', '.xls'}
-                x = readmatrix(fullFileName, 'Range', 'A2:A72001');
+                x = readmatrix(fullFileName, 'Range', 'A2:A72002');
             case '.csv'
                 data = readmatrix(fullFileName);
-                x = data(2:72001, 1); % 第四列，行3-72002
+                x = data(2:72002, 1); % 第四列，行3-72002
             otherwise
                 error('不支持的格式: %s', ext);
         end
