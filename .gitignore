@@ -172,3 +172,4 @@ cython_debug/
 .pypirc
 /media/upload/marks/TimeFrequencyLabelTask/labels/
 /media/upload/marks/UnsupervisedLabelTask/labels/
+/media/upload/data_sets/unzip/
