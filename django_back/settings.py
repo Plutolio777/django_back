@@ -29,7 +29,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "47.121.122.200",
     "localhost",
-    "127.0.0.1"
+    "127.0.0.1",
+    "qiaozhijing.cn"
 ]
 
 
