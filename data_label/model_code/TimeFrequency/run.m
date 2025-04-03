@@ -117,8 +117,8 @@ end
 
 % 分类及数据清洗
 validCount = 1;
-filteredFiles = cell(1440,1);
-filteredLabels = cell(1440,1);
+filteredFiles = cell(60*length(files),1);
+filteredLabels = cell(60*length(files),1);
 
 
 for i = 1: 60*length(files)
