@@ -110,6 +110,7 @@ for k = 1:length(files)
         end
     catch ME
         warning('文件%s处理失败: %s', baseFileName, ME.message);
+        disp(getReport(ME, 'extended', 'hyperlinks', 'on'));
     end
 end
 
@@ -131,6 +132,7 @@ for i = 1:1440
         end
     catch ME
         warning('文件%s处理失败: %s', fileNames{i}, ME.message);
+        disp(getReport(ME, 'extended', 'hyperlinks', 'on'));
     end
 end
 
