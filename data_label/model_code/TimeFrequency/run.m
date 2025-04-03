@@ -58,19 +58,18 @@ for k = 1:length(files)
             case '.txt'
                 x = load(fullFileName);
             case {'.xlsx', '.xls'}
-                data = readmatrix(fullFileName);
-                x = data(2:end, 4);
+                x = readmatrix(fullFileName, 'Range', 'A2:A72001');
             case '.csv'
                 data = readmatrix(fullFileName);
-                x = data(2:end, 4); % 从第3行开始到最后一行，第4列
+                x = data(2:72001, 1); % 第四列，行3-72002
             otherwise
                 error('不支持的格式: %s', ext);
         end
 
         x = x(:); % 确保列向量
-//         if numel(x) ~= 72000
-//             error('数据长度错误');
-//         end
+        if numel(x) ~= 72000
+            error('数据长度错误');
+        end
 
         for i = 1:60
             % 正确提取1200个样本点
