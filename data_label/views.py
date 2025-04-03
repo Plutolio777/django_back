@@ -97,6 +97,7 @@ class DataMarkTaskBaseViewSet(viewsets.ModelViewSet):
         result_file_path = os.path.join(out_put_path, "classification_results_1.xlsx")
         if os.path.exists(result_file_path):
             df = pd.read_excel(result_file_path, header=0)
+            df = df.fillna('')
             datas = df.to_dict('records')
             for row in datas:
                 file_path, label = row.get("FileName"), row.get("Label")
@@ -171,6 +172,7 @@ class CleanedDataList(viewsets.ModelViewSet):
         result_file_path = os.path.join(out_put_path, "classification_results_1.xlsx")
         if os.path.exists(result_file_path):
             df = pd.read_excel(result_file_path, header=0)
+            df = df.fillna('')
             datas = df.to_dict('records')
             for row in datas:
                 file_path, label = row.get("FileName"), row.get("Label")
