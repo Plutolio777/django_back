@@ -25,7 +25,6 @@ end
 
 % 加载模型
 load net.mat
-net = optimizedNet;
 
 fs = 20; % 数据采样频率
 t = 0:1/fs:1200/fs;
