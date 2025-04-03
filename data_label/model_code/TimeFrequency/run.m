@@ -13,6 +13,8 @@ else
     disp(['文件夹已存在', img_dir]);
 end
 
+outFile = fullfile(outDir, "classification_results_1.xlsx");
+
 % 获取文件夹中所有数据文件
 folder = inputDir;
 fileTypes = {'*.txt', '*.xlsx', '*.csv'};
