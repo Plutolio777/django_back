@@ -2,12 +2,21 @@
   <el-container style="height: 100%; width: 100%">
     <el-aside class="tss-aside">
       <div class="tss-menu">
+
         <el-menu
             default-active="2"
             class="el-menu-vertical-demo"
             active-text-color="#183080"
             router
         >
+          <el-sub-menu index="0">
+            <template #title>
+              <el-icon>
+                <svg t="1732947152689" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8685" width="20" height="20"><path d="M832 96c52.49 0 95.14 42.125 95.987 94.412L928 192v640c0 52.49-42.125 95.14-94.412 95.987L832 928H192c-52.49 0-95.14-42.125-95.987-94.412L96 832V671.647c0-17.674 14.327-32 32-32 17.496 0 31.713 14.041 31.996 31.47l0.004 0.53V832c0 17.496 14.042 31.713 31.47 31.996l0.53 0.004h640c17.496 0 31.713-14.042 31.996-31.47L864 832V192c0-17.496-14.042-31.713-31.47-31.996L832 160H192c-17.496 0-31.713 14.042-31.996 31.47L160 192v224.802c0 17.673-14.327 32-32 32-17.496 0-31.713-14.042-32-31.471V192c0-52.49 42.125-95.14 94.412-95.987L192 96h640z" fill="#2c2c2c" p-id="8686"></path><path d="M614.589 275.063c12.206-27.614 52.173-24.434 60.096 4.351l0.23 0.88 57.265 230.818h30.48c17.496 0 31.713 14.042 32 31.47v0.53c0 17.496-14.042 31.713-31.471 31.996l-0.53 0.004h-55.51c-14.558 0-27.261-9.823-30.95-23.868l-0.109-0.427-40.773-164.345-160.986 364.206c-11.428 25.855-48.174 25.2-58.83-0.684l-0.315-0.792-97.642-254.539-32.304 63.042a32 32 0 0 1-28.017 17.404l-0.462 0.003H65.155c-17.673 0-32-14.327-32-32 0-17.496 14.042-31.713 31.471-31.996l0.53-0.004H237.2l56.072-109.42c12.495-24.385 47.729-22.745 58.05 2.364l0.305 0.768 95.528 249.027 167.433-378.788z" fill="#2c2c2c" p-id="8687"></path></svg>
+              </el-icon>
+              <span>数据大盘</span>
+            </template>
+          </el-sub-menu>
           <el-sub-menu index="1">
             <template #title>
               <el-icon>
@@ -26,7 +35,7 @@
               <span>数据标注</span>
             </template>
             <el-menu-item index="/system/tag-manage">标签组管理</el-menu-item>
-            <el-menu-item index="/system/frequency-label">时频标注</el-menu-item>
+            <el-menu-item index="/system/frequency-label">时频特征提取</el-menu-item>
             <el-menu-item index="/system/unsupervised-label">无监督标注</el-menu-item>
 <!--            <el-menu-item index="/system/data-annotation">标注数据</el-menu-item>-->
           </el-sub-menu>
@@ -38,7 +47,7 @@
               <span>数据处理</span>
             </template>
             <el-menu-item index="/system/data-clean">数据清洗</el-menu-item>
-            <el-menu-item index="/system/data-dashboard">数据大盘</el-menu-item>
+<!--            <el-menu-item index="/system/data-dashboard">数据大盘</el-menu-item>-->
           </el-sub-menu>
 <!--          <el-sub-menu index="4">-->
 <!--            <template #title>-->

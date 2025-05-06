@@ -26,12 +26,16 @@ class HomeView(View):
         Response = render(request, 'index.html')
         # 5. 返回响应数据
         return Response
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('accounts.urls')),
     path('api/data_manage/', include('data_manage.urls')),
     path('api/data_mark/', include('data_mark.urls')),
     path('api/data_mark/', include('data_label.urls')),
+
+    path('api/statistics/', include('data_statistics.urls')),
     path('', HomeView.as_view()),
 ]
 
@@ -45,4 +49,3 @@ from django.conf.urls.static import static
 
 # 让 Django 开发服务器提供 `MEDIA_ROOT` 目录下的文件
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

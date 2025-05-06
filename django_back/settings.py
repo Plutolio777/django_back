@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'data_manage.apps.DataManageConfig',
     'data_mark.apps.DataMarkConfig',
-    'data_label.apps.DataLabelConfig'
+    'data_label.apps.DataLabelConfig',
+    'data_statistics.apps.DataStatisticsConfig'
 ]
 
 # 定时任务配置

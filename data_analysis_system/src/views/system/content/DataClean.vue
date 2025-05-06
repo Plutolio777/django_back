@@ -9,8 +9,8 @@
         </div>
         <div>
           <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-            时频标注</h1>
-          <p class="mt-2 text-gray-600">对时序数据进行时频分析和标注，支持多种数据源和数据集的处理</p>
+            数据清洗</h1>
+          <p class="mt-2 text-gray-600">选择标注完成的数据集后，系统自动调用清洗和分类算法导出数据，默认下载清洗后正常</p>
         </div>
       </div>
       <div class="mt-4 flex gap-4">
