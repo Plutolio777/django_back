@@ -3,24 +3,7 @@
   <div class="min-h-screen bg-gray-50">
     <main class="p-6">
       <!-- 统计卡片 -->
-      <div class="grid grid-cols-4 gap-6 mb-6">
-        <div v-for="(stat, index) in stats"
-             :key="index"
-             class="bg-white rounded-xl p-6 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-gray-600">{{ stat.name }}</span>
-            <i :class="[stat.icon, 'text-blue-600']"></i>
-          </div>
-          <div class="text-2xl font-semibold">{{ stat.value }}</div>
-          <div class="mt-2 text-sm">
-<span :class="stat.trend === '上升' ? 'text-green-500' : 'text-red-500'">
-<i :class="stat.trend === '上升' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
-{{ stat.percentage }}
-</span>
-            <span class="text-gray-500 ml-1">较上周</span>
-          </div>
-        </div>
-      </div>
+      <StatsCard />
       <!-- 图表区域 -->
       <div class="grid grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-xl p-6 shadow-sm">
@@ -116,6 +99,8 @@
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as echarts from 'echarts';
+import apiService from '@/api/apiService';
+import StatsCard from './StatsCard.vue';
 const activeMenu = ref(0);
 const trendChart = ref<HTMLElement | null>(null);
 const distributionChart = ref<HTMLElement | null>(null);
@@ -147,12 +132,7 @@ const menuItems = [
   { name: '用户权限', icon: 'fas fa-user-shield' },
   { name: '报表中心', icon: 'fas fa-file-alt' }
 ];
-const stats = [
-  { name: '总存储量', value: '125,430', icon: 'fas fa-database', trend: '上升', percentage: '15%' },
-  { name: '已标注数据集', value: '98,342', icon: 'fas fa-check-circle', trend: '上升', percentage: '12%' },
-  { name: '已清洗数据集', value: '78,342', icon: 'fas fa-tasks', trend: '上升', percentage: '8%' },
-  { name: '异常数据', value: '1,234', icon: 'fas fa-exclamation-triangle', trend: '下降', percentage: '5%' }
-];
+const statsCard = ref();
 const realtimeData = [
   { id: 'BD2024020801', type: '时频标注', status: '已完成', time: '2024-02-08 14:30', processor: '张工程师' },
   { id: 'BD2024020802', type: '无监督标注', status: '处理中', time: '2024-02-08 14:25', processor: '李数据师' },
@@ -169,86 +149,145 @@ const getStatusClass = (status: string) => {
   };
   return classes[status as keyof typeof classes];
 };
-onMounted(() => {
-  if (trendChart.value && distributionChart.value) {
-    const trend = echarts.init(trendChart.value);
-    const distribution = echarts.init(distributionChart.value);
-    trend.setOption({
-      animation: false,
-      tooltip: {
-        trigger: 'axis'
+const trendData = ref([]);
+const loading = ref(true);
+
+const fetchTrendData = async () => {
+  try {
+    const res = await apiService.fetchLabelTrendDaily();
+    if (res.success) {
+      trendData.value = res.data.datas;
+      initTrendChart();
+    }
+  } catch (error) {
+    console.error('获取标注趋势数据失败:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchLabelTypeData = async () => {
+  try {
+    const res = await apiService.fetchLabelTypeDistribution();
+    if (res.success) {
+      initDistributionChart(res.data);
+    }
+  } catch (error) {
+    console.error('获取标注类型数据失败:', error);
+  }
+};
+
+const initDistributionChart = (data) => {
+  if (!distributionChart.value) return;
+  
+  const chart = echarts.init(distributionChart.value);
+  const option = {
+    animation: false,
+    tooltip: {
+      trigger: 'item'
+    },
+    legend: {
+      orient: 'vertical',
+      right: 10,
+      top: 'center'
+    },
+    series: [{
+      type: 'pie',
+      radius: ['40%', '70%'],
+      avoidLabelOverlap: false,
+      itemStyle: {
+        borderRadius: 10,
+        borderColor: '#fff',
+        borderWidth: 2
       },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
+      label: {
+        show: false
       },
-      xAxis: {
-        type: 'category',
-        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: '14',
+          fontWeight: 'bold'
+        }
       },
-      yAxis: {
-        type: 'value'
+      labelLine: {
+        show: false
       },
-      series: [{
-        data: [820, 932, 901, 934, 1290, 1330, 1320],
+      data: [
+        { value: data.time_freq, name: '时频标注' },
+        { value: data.unsupervised, name: '无监督标注' }
+      ]
+    }]
+  };
+  chart.setOption(option);
+  
+  window.addEventListener('resize', () => {
+    chart.resize();
+  });
+};
+
+const initTrendChart = () => {
+  if (!trendChart.value) return;
+  
+  const chart = echarts.init(trendChart.value);
+  const option = {
+    animation: false,
+    tooltip: {
+      trigger: 'axis'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: trendData.value.map(item => item.date)
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: [
+      {
+        name: '时频标注',
         type: 'line',
         smooth: true,
-        areaStyle: {
-          opacity: 0.1
-        },
-        lineStyle: {
-          width: 3
-        },
-        itemStyle: {
-          color: '#3B82F6'
-        }
-      }]
-    });
-    distribution.setOption({
-      animation: false,
-      tooltip: {
-        trigger: 'item'
+        data: trendData.value.map(item => item.time_freq),
+        areaStyle: { opacity: 0.1 },
+        lineStyle: { width: 3 },
+        itemStyle: { color: '#3B82F6' }
       },
-      legend: {
-        orient: 'vertical',
-        right: 10,
-        top: 'center'
+      {
+        name: '无监督标注', 
+        type: 'line',
+        smooth: true,
+        data: trendData.value.map(item => item.unsupervised),
+        areaStyle: { opacity: 0.1 },
+        lineStyle: { width: 3 },
+        itemStyle: { color: '#10B981' }
       },
-      series: [{
-        type: 'pie',
-        radius: ['40%', '70%'],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 10,
-          borderColor: '#fff',
-          borderWidth: 2
-        },
-        label: {
-          show: false
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: '14',
-            fontWeight: 'bold'
-          }
-        },
-        labelLine: {
-          show: false
-        },
-        data: [
-          { value: 1280, name: '时频标注' },
-          { value: 860, name: '无监督标注' }
-        ]
-      }]
-    });
-    window.addEventListener('resize', () => {
-      trend.resize();
-      distribution.resize();
-    });
-  }
+      {
+        name: '总量',
+        type: 'line',
+        smooth: true,
+        data: trendData.value.map(item => item.total),
+        areaStyle: { opacity: 0.1 },
+        lineStyle: { width: 3 },
+        itemStyle: { color: '#F59E0B' }
+      }
+    ]
+  };
+  chart.setOption(option);
+  
+  window.addEventListener('resize', () => {
+    chart.resize();
+  });
+};
+
+onMounted(() => {
+  fetchTrendData();
+  fetchLabelTypeData();
 });
 </script>
 <style scoped>

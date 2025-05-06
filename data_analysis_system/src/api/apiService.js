@@ -228,6 +228,42 @@ const apiConfig = {
         url: '/api/data_mark/cleaned/data_detail/',
         isFileUpload: false,
     },
+    // 数据统计相关API
+    fetchDataSize: {
+        method: 'GET',
+        url: '/api/statistics/data_size/',
+        isFileUpload: false,
+    },
+    fetchLabelSize: {
+        method: 'GET',
+        url: '/api/statistics/label_size/',
+        isFileUpload: false,
+    },
+    fetchLabelTrendDaily: {
+        method: 'GET',
+        url: '/api/statistics/label_trend_daily/',
+        isFileUpload: false,
+    },
+    fetchLabelTypeDistribution: {
+        method: 'GET',
+        url: '/api/statistics/label_type_distribution/',
+        isFileUpload: false,
+    },
+    fetchLabelTrendDaily: {
+        method: 'GET',
+        url: '/api/statistics/label_trend_daily/',
+        isFileUpload: false,
+    },
+    fetchCleanedSize: {
+        method: 'GET',
+        url: '/api/statistics/cleaned_size/',
+        isFileUpload: false,
+    },
+    fetchErrorSize: {
+        method: 'GET',
+        url: '/api/statistics/error_size/',
+        isFileUpload: false,
+    },
 };
 
 // 生成 API 请求函数

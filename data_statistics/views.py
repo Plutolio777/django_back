@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db import models
 
 # Create your views here.
 
@@ -74,8 +75,7 @@ class CalculateUserDataSize(APIView):
         }
 
         # 返回序列化的结果
-        serializer = DataSizeSerializer(data)
-        return Response(serializer.data)
+        return Response(data)
 
     @classmethod
     def convert_to_readable_size(cls, size_in_bytes):
@@ -153,6 +153,47 @@ class LabelDataSizeTrend(APIView):
         return Response(data)
 
 
+class LabelTrendDaily(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_id = request.user.id
+        today = timezone.now().date()
+        days_ago = today - timedelta(days=30)  # 获取最近30天的数据
+        
+        # 初始化日期范围
+        date_range = [days_ago + timedelta(days=i) for i in range(31)]
+        
+        # 查询时频标注数据
+        time_freq_data = TimeFrequencyLabelTask.objects.filter(
+            dataset__creator=user_id,
+            label_create_time__date__gte=days_ago
+        ).values('label_create_time__date').annotate(count=models.Count('id'))
+        
+        # 查询无监督标注数据
+        unsupervised_data = UnsupervisedLabelTask.objects.filter(
+            dataset__creator=user_id,
+            label_create_time__date__gte=days_ago
+        ).values('label_create_time__date').annotate(count=models.Count('id'))
+        
+        # 合并数据
+        result = []
+        for date in date_range:
+            time_freq_count = next((item['count'] for item in time_freq_data 
+                                  if item['label_create_time__date'] == date), 0)
+            unsupervised_count = next((item['count'] for item in unsupervised_data 
+                                     if item['label_create_time__date'] == date), 0)
+            
+            result.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'time_freq': time_freq_count,
+                'unsupervised': unsupervised_count,
+                'total': time_freq_count + unsupervised_count
+            })
+        
+        return Response(result)
+
+
 class CleanedDataSizeTrend(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -205,6 +246,28 @@ class CleanedDataSizeTrend(APIView):
 
         return Response(data)
 
+
+class LabelTypeDistribution(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # 获取30天前的日期
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        # 统计时频标注数量
+        time_freq_count = TimeFrequencyLabelTask.objects.filter(
+            label_create_time__gte=thirty_days_ago
+        ).count()
+        
+        # 统计无监督标注数量
+        unsupervised_count = UnsupervisedLabelTask.objects.filter(
+            label_create_time__gte=thirty_days_ago
+        ).count()
+        
+        return Response({
+            'time_freq': time_freq_count,
+            'unsupervised': unsupervised_count
+        })
 
 class AbnormalLabelDataTrend(APIView):
     permission_classes = [IsAuthenticated]
