@@ -15,42 +15,8 @@
           <div ref="distributionChart" class="h-80"></div>
         </div>
       </div>
-      <!-- 3D模型展示区域 -->
-      <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium">3D 模型预览</h3>
-          <div class="flex gap-2">
-            <button class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-gray-100 text-gray-600 text-sm">
-              <i class="fas fa-cube mr-2"></i>切换模型
-            </button>
-            <button @click="enterFullscreen" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-blue-600 text-white text-sm">
-              <i class="fas fa-expand-arrows-alt mr-2"></i>全屏查看
-            </button>
-          </div>
-        </div>
-        <div
-            class="w-full aspect-[2/1] rounded-xl overflow-hidden shadow-sm relative group cursor-pointer"
-            :class="{'fixed inset-0 z-[100] !rounded-none': isFullscreen}"
-        >
-          <div class="absolute top-4 right-4 z-10" v-if="isFullscreen">
-            <button @click="exitFullscreen" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-gray-800 bg-opacity-50 text-white text-sm hover:bg-opacity-70">
-              <i class="fas fa-compress-alt mr-2"></i>退出全屏
-            </button>
-          </div>
-          <img src="https://ai-public.mastergo.com/ai/img_res/2345cfe07d14515d97455ffdfb8e14a8.jpg"
-               alt="桥梁模型"
-               :class="{'w-full h-full object-contain': isFullscreen, 'w-full h-full object-cover': !isFullscreen}">
-          <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-               :class="{'!bg-opacity-60': isFullscreen}">
-            <div class="text-white text-center">
-              <p class="font-medium mb-2">斜拉桥模型 2024版</p>
-              <p class="text-sm text-gray-200">最后更新: 2024-02-08</p>
-            </div>
-          </div>
-        </div>
-      </div>
       <!-- 实时数据列表 -->
-      <div class="bg-white rounded-xl p-6 shadow-sm">
+      <!-- <div class="bg-white rounded-xl p-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium">实时处理数据</h3>
           <div class="flex gap-2">
@@ -92,7 +58,7 @@
           </tr>
           </tbody>
         </table>
-      </div>
+      </div> -->
     </main>
   </div>
 </template>
@@ -104,25 +70,9 @@ import StatsCard from './StatsCard.vue';
 const activeMenu = ref(0);
 const trendChart = ref<HTMLElement | null>(null);
 const distributionChart = ref<HTMLElement | null>(null);
-const isFullscreen = ref(false);
-const enterFullscreen = () => {
-  isFullscreen.value = true;
-  document.body.style.overflow = 'hidden';
-};
-const exitFullscreen = () => {
-  isFullscreen.value = false;
-  document.body.style.overflow = '';
-};
-const handleEscKey = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && isFullscreen.value) {
-    exitFullscreen();
-  }
-};
 onMounted(() => {
-  document.addEventListener('keydown', handleEscKey);
 });
 onBeforeUnmount(() => {
-  document.removeEventListener('keydown', handleEscKey);
 });
 const menuItems = [
   { name: '数据概览', icon: 'fas fa-chart-pie' },
@@ -181,6 +131,10 @@ const initDistributionChart = (data) => {
   if (!distributionChart.value) return;
   
   const chart = echarts.init(distributionChart.value);
+  
+  // 检查是否有数据
+  const hasData = data && (data.time_freq > 0 || data.unsupervised > 0);
+  
   const option = {
     animation: false,
     tooltip: {
@@ -191,6 +145,17 @@ const initDistributionChart = (data) => {
       right: 10,
       top: 'center'
     },
+    graphic: !hasData ? {
+      type: 'text',
+      left: 'center',
+      top: 'middle',
+      style: {
+        text: '暂无数据',
+        fill: '#999',
+        fontSize: 16,
+        fontWeight: 'bold'
+      }
+    } : undefined,
     series: [{
       type: 'pie',
       radius: ['40%', '70%'],
@@ -213,10 +178,10 @@ const initDistributionChart = (data) => {
       labelLine: {
         show: false
       },
-      data: [
+      data: hasData ? [
         { value: data.time_freq, name: '时频标注' },
         { value: data.unsupervised, name: '无监督标注' }
-      ]
+      ] : []
     }]
   };
   chart.setOption(option);

@@ -158,6 +158,7 @@
         </tbody>
       </table>
     </div>
+
     <!-- 分页 -->
     <div class="flex items-center justify-between bg-white px-4 py-3 sm:px-6">
       <div class="flex items-center gap-2">
@@ -198,6 +199,43 @@
         </button>
       </div>
     </div>
+
+    <!-- 3D模型展示区域 -->
+    <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium">3D 模型预览</h3>
+        <div class="flex gap-2">
+          <button class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-gray-100 text-gray-600 text-sm">
+            <i class="fas fa-cube mr-2"></i>切换模型
+          </button>
+          <button @click="enterFullscreen" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-blue-600 text-white text-sm">
+            <i class="fas fa-expand-arrows-alt mr-2"></i>全屏查看
+          </button>
+        </div>
+      </div>
+      <div
+          class="w-full aspect-[2/1] rounded-xl overflow-hidden shadow-sm relative group cursor-pointer"
+          :class="{'fixed inset-0 z-[100] !rounded-none': isFullscreen}"
+      >
+        <div class="absolute top-4 right-4 z-10" v-if="isFullscreen">
+          <button @click="exitFullscreen" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-gray-800 bg-opacity-50 text-white text-sm hover:bg-opacity-70">
+            <i class="fas fa-compress-alt mr-2"></i>退出全屏
+          </button>
+        </div>
+        <img src="https://ai-public.mastergo.com/ai/img_res/2345cfe07d14515d97455ffdfb8e14a8.jpg"
+             alt="桥梁模型"
+             :class="{'w-full h-full object-contain': isFullscreen, 'w-full h-full object-cover': !isFullscreen}">
+        <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+             :class="{'!bg-opacity-60': isFullscreen}">
+          <div class="text-white text-center">
+            <p class="font-medium mb-2">斜拉桥模型 2024版</p>
+            <p class="text-sm text-gray-200">最后更新: 2024-02-08</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- 数据集查看弹窗 -->
     <div v-if="showViewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div class="w-11/12 max-w-6xl max-h-[90vh] rounded-xl bg-white p-8 overflow-y-auto">
@@ -318,6 +356,7 @@
         </div>
       </div>
     </div>
+    
   </div>
 </template>
 <script lang="ts">
@@ -330,10 +369,12 @@ export default {
     this.selectedTypes = [];
     this.selectedStatus = []
     this.searchQuery = "";
-    this.fetchDataLabel()
+    this.fetchDataLabel();
+    document.addEventListener('keydown', this.handleEscKey);
   },
   data() {
     return {
+      isFullscreen: false,
       // 显示弹窗状态
       showCreateModal: false,
       showTypeFilter: false,
@@ -435,9 +476,23 @@ export default {
     Object.values(this.pollingControllers).forEach(controller => {
       console.log(controller)
       controller.abort()
-    })
+    });
+    document.removeEventListener('keydown', this.handleEscKey);
   },
   methods: {
+    enterFullscreen() {
+      this.isFullscreen = true;
+      document.body.style.overflow = 'hidden';
+    },
+    exitFullscreen() {
+      this.isFullscreen = false;
+      document.body.style.overflow = '';
+    },
+    handleEscKey(event) {
+      if (event.key === 'Escape' && this.isFullscreen) {
+        this.exitFullscreen();
+      }
+    },
     // 下载项目
     async downloadItem(dataset) {
       try {
