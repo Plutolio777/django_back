@@ -14,15 +14,7 @@
       <div class="mt-4 flex gap-4">
         <div class="flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-green-500"></div>
-          <span class="text-gray-600">已启用标签：156</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-          <span class="text-gray-600">标签组：12</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-          <span class="text-gray-600">未启用：18</span>
+          <span class="text-gray-600">已启用标签：7</span>
         </div>
       </div>
     </div>

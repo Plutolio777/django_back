@@ -37,7 +37,7 @@ export default defineConfig({
           if (assetInfo.name.endsWith(".css")) {
             return "static/css/[name]-[hash].css";
           }
-          const imgExtendList = ["png", ".jpg", ".jpeg", ".svg", ".webp", ".gif", ".ico"]
+          const imgExtendList = ["png", ".jpg", ".jpeg", ".svg", ".webp", ".gif", ".ico", ".obj"]
           if (imgExtendList.some(ext => {
             assetInfo.name.endsWith(ext)
           })) {

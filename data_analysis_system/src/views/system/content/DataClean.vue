@@ -208,31 +208,30 @@
           <button class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-gray-100 text-gray-600 text-sm">
             <i class="fas fa-cube mr-2"></i>切换模型
           </button>
-          <button @click="enterFullscreen" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-blue-600 text-white text-sm">
+          <button @click="enterFullscreen()" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-blue-600 text-white text-sm">
             <i class="fas fa-expand-arrows-alt mr-2"></i>全屏查看
           </button>
         </div>
       </div>
-      <div
-          class="w-full aspect-[2/1] rounded-xl overflow-hidden shadow-sm relative group cursor-pointer"
-          :class="{'fixed inset-0 z-[100] !rounded-none': isFullscreen}"
-      >
-        <div class="absolute top-4 right-4 z-10" v-if="isFullscreen">
-          <button @click="exitFullscreen" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-gray-800 bg-opacity-50 text-white text-sm hover:bg-opacity-70">
-            <i class="fas fa-compress-alt mr-2"></i>退出全屏
-          </button>
-        </div>
-        <img src="https://ai-public.mastergo.com/ai/img_res/2345cfe07d14515d97455ffdfb8e14a8.jpg"
-             alt="桥梁模型"
-             :class="{'w-full h-full object-contain': isFullscreen, 'w-full h-full object-cover': !isFullscreen}">
-        <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-             :class="{'!bg-opacity-60': isFullscreen}">
-          <div class="text-white text-center">
-            <p class="font-medium mb-2">斜拉桥模型 2024版</p>
-            <p class="text-sm text-gray-200">最后更新: 2024-02-08</p>
+      <div class="w-full aspect-[2/1] rounded-xl overflow-hidden shadow-sm relative group cursor-pointer">
+        <ThreeJSViewer :modelPath="'/static/苏通大桥模型.obj'" />
+      </div>
+      
+      <teleport to="body">
+        <div 
+          v-if="isFullscreen"
+          class="fixed inset-0 z-[9999] bg-black"
+        >
+          <div class="absolute top-4 right-4 z-10">
+            <button @click="exitFullscreen()" class="!rounded-button whitespace-nowrap px-3 py-1.5 bg-gray-800 bg-opacity-50 text-white text-sm hover:bg-opacity-70">
+              <i class="fas fa-compress-alt mr-2"></i>退出全屏
+            </button>
+          </div>
+          <div class="w-full h-full">
+            <ThreeJSViewer :modelPath="'/static/苏通大桥模型.obj'" />
           </div>
         </div>
-      </div>
+      </teleport>
     </div>
 
 
@@ -360,8 +359,37 @@
   </div>
 </template>
 <script lang="ts">
+import { defineComponent } from 'vue'
 import apiService from "@/api/apiService"
-export default {
+import ThreeJSViewer from '@/components/ThreeJSViewer.vue'
+
+interface Dataset {
+  id: number;
+  name: string;
+  type: string;
+  data_source_type: string;
+  description: string;
+}
+
+interface DataLabelItem {
+  id: number;
+  dataset: Dataset;
+  label_type: string;
+  label_create_time: string;
+  task_execute_time: string;
+  result_file_content: {
+    FileName: string;
+    FilePath: string;
+    Label: string;
+  }[];
+  progress?: number;
+  status?: string;
+}
+
+export default defineComponent({
+  components: {
+    ThreeJSViewer
+  },
   mounted() {
     this.pageSize = 10;
     this.currentPage = 1;
@@ -382,8 +410,8 @@ export default {
       showTypeSelect: false,
       showEditModal: false,
       showViewModal: false,
-      selectedFile: null,
-      fileInput: null,
+      selectedFile: null as File | null,
+      fileInput: null as HTMLInputElement | null,
       newDataset: {
         name: '',
         type: '',
@@ -392,29 +420,28 @@ export default {
         apiUrl: '',
         jsonPath: ''
       },
-      editingDataset: null,
+      editingDataset: null as any,
       searchQuery: '',
       currentPage: 1,
       pageSize: 10,
-      selectedTypes: [],
-      selectedStatus: [],
-      dataTypes: ['远程文件', '接口获取'],
+      selectedTypes: [] as string[],
+      selectedStatus: [] as string[],
+      dataTypes: ['远程文件', '接口获取'] as const,
       datasetStats: {totalRecords: 2547},
-      datasetHeaders: ['FileName', "Label"],
+      datasetHeaders: ['FileName', "Label"] as const,
       detailCurrentPage: 1,
       detailPageSize: 5,
       showPageSizeOptions: false,
       showDetailPageSizeOptions: false,
-      // dataLabelList: [],
       total: 0,
       showDataTypeFilter: false,
-      selectedDataTypes: [],
-      dataLabelList: [],
-      pollingControllers: {},
-      selectedDataset: {},
-      executingDataSource: {},
+      selectedDataTypes: [] as string[],
+      dataLabelList: [] as DataLabelItem[],
+      pollingControllers: {} as Record<number, AbortController | undefined>,
+      selectedDataset: {} as DataLabelItem,
+      executingDataSource: {} as any,
       showExecuteModal: false,
-      selectedTaskIds: [],
+      selectedTaskIds: [] as number[],
       marTypeList:[
         {
           id: 1,
@@ -483,10 +510,16 @@ export default {
     enterFullscreen() {
       this.isFullscreen = true;
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
     },
     exitFullscreen() {
       this.isFullscreen = false;
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
     },
     handleEscKey(event) {
       if (event.key === 'Escape' && this.isFullscreen) {
@@ -572,7 +605,7 @@ export default {
     },
 
     // 开始轮询任务进度
-    startPolling(task, taskId) {
+    startPolling(task: DataLabelItem, taskId: number) {
       if (task.id in this.pollingControllers) {
         this.pollingControllers[task.id].abort() // 先中止旧的
         delete this.pollingControllers[task.id]
@@ -614,7 +647,7 @@ export default {
       }
     },
     // 停止任务
-    stopTask(item) {
+    stopTask(item: DataLabelItem) {
       const controller = this.pollingControllers[item.id]
       if (controller) {
         controller.abort()
@@ -636,7 +669,7 @@ export default {
       }
     }
   }
-};
+})
 </script>
 <style scoped>
 .swiper-button-next::after,
